@@ -84,7 +84,7 @@ border_7 = pygame.image.load("border_bottom.png").convert_alpha()
 border_7 = pygame.transform.scale(border_7, (display_width, display_height))
 border_8 = pygame.image.load("border_bottom_right.png").convert_alpha()
 border_8 = pygame.transform.scale(border_8, (display_width, display_height))
-border_list = [border_0, border_1, border_2, border_3, border_5, border_6]
+border_list = [border_0, border_1, border_2, border_3, border_4, border_5, border_6, border_7, border_8]
 
 
 gun_zombie_list_list_x_bottom = [
@@ -230,7 +230,6 @@ gun_zombie_list_list_y_right = [
     [3, 16],
     [3, 16],
     [4, 15]
-
 ]
 
 wall_list_list_x_right = [
@@ -311,9 +310,8 @@ def map_square(room, x, y, state):
                 pygame.draw.rect(game_display, green, (x + math.floor(state["gun_zombie_x"][i] / 5), y + math.floor(state["gun_zombie_y"][i] / 5), 16, 16))
         game_display.blit(tiny_pixel_guy, (x + math.floor(state["pixel_guy_x"] / 5), y + math.floor(state["pixel_guy_y"] / 5)))
 
-    elif state["current_room_cleared"]:
+    elif state["room_entered"][room]:
         pygame.draw.rect(game_display, green, (x, y, 200, 200))
-        print("hi")
         if state["room_rotations"] == "bottom":
             wall_list_x = wall_list_list_x_bottom[state["room_types"][room]]
             wall_list_y = wall_list_list_y_bottom[state["room_types"][room]]
@@ -664,20 +662,20 @@ def set_loop_variables(state):
         state["can_enter_left"] = False
         state["can_enter_right"] = False
         state["can_enter_bottom"] = True
-    if state["room"] == 4:
+    if state["room"] == 5:
         state["can_enter_top"] = True
         state["can_enter_left"] = False
         state["can_enter_right"] = False
-        state["can_enter_bottom"] = False
-    if state["room"] == 5:
+        state["can_enter_bottom"] = True
+    if state["room"] == 6:
         state["can_enter_top"] = True
         state["can_enter_left"] = False
         state["can_enter_right"] = True
         state["can_enter_bottom"] = False
-    if state["room"] == 6:
+    if state["room"] == 7:
         state["can_enter_top"] = False
         state["can_enter_left"] = True
-        state["can_enter_right"] = False
+        state["can_enter_right"] = True
         state["can_enter_bottom"] = False
 
 
@@ -695,10 +693,15 @@ def set_room_types(state, rooms_chosen):
 
 def set_pre_level_variables(state):
     rooms_chosen = []
-    for i in range(7):
-        type_chosen = set_room_types(state, rooms_chosen)
-        state["room_types"].append(type_chosen)
-        rooms_chosen.append(type_chosen)
+    for i in range(9):
+        if i == 4:
+            state["room_types"].append("boss")
+        elif i == 8:
+            state["room_types"].append("shop")
+        else:
+            type_chosen = set_room_types(state, rooms_chosen)
+            state["room_types"].append(type_chosen)
+            rooms_chosen.append(type_chosen)
 
     state["ammo"] = state["max_ammo"]
     state["wall_list_x"] = wall_list_list_x_bottom[state["room_types"][state["room"]]]
@@ -889,11 +892,11 @@ def new_room(new_room_number, entered, state, side_entered):
 
     if not entered:
         state["room_rotations"][state["room"]] = side_entered
-        state["gun_zombie_x"] = c[state["room_rotations"][state["room"]]][state["room"][state["room"]]]
-        state["gun_zombie_y"] = gun_zombie_dictionary_y[state["room_rotations"][state["room"]]][state["room"][state["room"]]]
+        state["gun_zombie_x"] = gun_zombie_dictionary_x[state["room_rotations"][state["room"]]][state["room_types"][state["room"]]]
+        state["gun_zombie_y"] = gun_zombie_dictionary_y[state["room_rotations"][state["room"]]][state["room_types"][state["room"]]]
 
-    state["wall_list_x"] = wall_dictionary_x[state["room_rotations"][state["room"]]][state["room_type"][state["room"]]]
-    state["wall_list_y"] = wall_dictionary_y[state["room_rotations"][state["room"]]][state["room"][state["room"]]]
+    state["wall_list_x"] = wall_dictionary_x[state["room_rotations"][state["room"]]][state["room_types"][state["room"]]]
+    state["wall_list_y"] = wall_dictionary_y[state["room_rotations"][state["room"]]][state["room_types"][state["room"]]]
 
     if side_entered == "bottom":
         state["pixel_guy_x"] = (display_width - pixel_guy_width) / 2
