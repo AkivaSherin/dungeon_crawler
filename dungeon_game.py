@@ -310,8 +310,8 @@ def map_square(room, x, y, state):
 
     elif get_room_entered(room, state):
         pygame.draw.rect(game_display, green, (x, y, 200, 200))
-        for i in range(len(wall_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)])):
-            pygame.draw.rect(game_display, gray, (x + wall_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)][i] * 10, y + wall_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)][i] * 10, 10, 10))
+        for i in range(len(wall_dictionary_x[get_room_rotation(room, state)][get_room_type(room, state)])):
+            pygame.draw.rect(game_display, gray, (x + wall_dictionary_x[get_room_rotation(room, state)][get_room_type(room, state)][i] * 10, y + wall_dictionary_y[get_room_rotation(room, state)][get_room_type(room, state)][i] * 10, 10, 10))
     else:
         pygame.draw.rect(game_display, red, (x, y, 200, 200))
         game_display.blit(pixel_question_mark, (x + 25, y + 25))
@@ -336,9 +336,9 @@ def map_screen(state):
         map_square(1, 400, 100, state)
         map_square(2, 700, 100, state)
         map_square(3, 100, 400, state)
-        map_square(4, 700, 400, state)
-        map_square(5, 100, 700, state)
-        map_square(6, 400, 700, state)
+        map_square(5, 700, 400, state)
+        map_square(6, 100, 700, state)
+        map_square(7, 400, 700, state)
         boss_square()
         shop_square()
 
