@@ -1119,22 +1119,18 @@ def new_level():
         clock.tick(60)
 
         if state["current_room_cleared"]:
-            if state["can_enter_right"]:
-                if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width - 100, display_height / 2 - 50, 100, 100):
-                    if pygame.key.get_pressed()[pygame.K_e]:
-                        new_room(state["room"] + 1, state["room_list"][state["room"] + 1]["entered"], state, "left")
-            elif state["can_enter_bottom"]:
-                if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, display_height - 100, 100, 100):
-                    if pygame.key.get_pressed()[pygame.K_e]:
-                        new_room(state["room"] + 3, state["room_list"][state["room"] + 3]["entered"], state, "top")
-            elif state["can_enter_left"]:
-                if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, 0, display_height / 2 - 50, 100, 100):
-                    if pygame.key.get_pressed()[pygame.K_e]:
-                        new_room(state["room"] - 1, state["room_list"][state["room"] - 1]["entered"], state, "right")
-            elif state["can_enter_top"]:
-                if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, 0, 100, 100):
-                    if pygame.key.get_pressed()[pygame.K_e]:
-                        new_room(state["room"] - 3, state["room_list"][state["room"] - 3]["entered"], state, "bottom")
+            if state["can_enter_right"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width - 100, display_height / 2 - 50, 100, 100):
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    new_room(state["room"] + 1, state["room_list"][state["room"] + 1]["entered"], state, "left")
+            elif state["can_enter_bottom"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, display_height - 100, 100, 100):
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    new_room(state["room"] + 3, state["room_list"][state["room"] + 3]["entered"], state, "top")
+            elif state["can_enter_left"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, 0, display_height / 2 - 50, 100, 100):
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    new_room(state["room"] - 1, state["room_list"][state["room"] - 1]["entered"], state, "right")
+            elif state["can_enter_top"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, 0, 100, 100):
+                if pygame.key.get_pressed()[pygame.K_e]:
+                    new_room(state["room"] - 3, state["room_list"][state["room"] - 3]["entered"], state, "bottom")
 
 
 new_level()
