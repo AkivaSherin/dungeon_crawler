@@ -555,6 +555,10 @@ def event_handling(state):
                     state["pixel_guy_x_speed"] *= 4
                     state["pixel_guy_y_speed"] *= 4
 
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_e:
+                state["e_just_pressed"] = False
+
     if state["dashing_timer"] == 0:
         if pygame.key.get_pressed()[pygame.K_w]:
             state["pixel_guy_y_speed"] = -1 * state["pixel_guy_speed"]
@@ -647,7 +651,7 @@ def set_loop_variables(state):
         state["can_enter_top"] = True
         state["can_enter_left"] = False
         state["can_enter_right"] = False
-        state["can_enter_bottom"] = True
+        state["can_enter_bottom"] = False
     if state["room"] == 6:
         state["can_enter_top"] = True
         state["can_enter_left"] = False
@@ -656,7 +660,7 @@ def set_loop_variables(state):
     if state["room"] == 7:
         state["can_enter_top"] = False
         state["can_enter_left"] = True
-        state["can_enter_right"] = True
+        state["can_enter_right"] = False
         state["can_enter_bottom"] = False
 
 
@@ -871,6 +875,9 @@ def new_room(new_room_number, entered, state, side_entered):
         state["room_list"][state["room"]]["room_rotation"] = side_entered
         state["gun_zombie_x"] = gun_zombie_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)]
         state["gun_zombie_y"] = gun_zombie_dictionary_y[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)]
+    else:
+        state["gun_zombie_x"] = []
+        state["gun_zombie_y"] = []
 
     state["wall_list_x"] = wall_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)]
     state["wall_list_y"] = wall_dictionary_y[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)]
@@ -927,6 +934,8 @@ def new_room(new_room_number, entered, state, side_entered):
     state["gun_zombie_timer"] = []
     state["gun_zombie_speed_x"] = []
     state["gun_zombie_speed_y"] = []
+    state["num_of_gun_zombies"] = len(state["gun_zombie_x"])
+    state["e_just_pressed"] = True
 
     for i in range(state["num_of_gun_zombies"]):
         state["gun_zombie_health"].append(state["gun_zombie_max_health"])
@@ -1074,7 +1083,8 @@ def new_level():
         "data": "",
         "reload_pie": "",
         "image_rect": "",
-        "pixel_guy_rotation": ""
+        "pixel_guy_rotation": "",
+        "e_just_pressed": ""
     }
 
     set_pre_level_variables(state)
@@ -1119,16 +1129,16 @@ def new_level():
         clock.tick(60)
 
         if state["current_room_cleared"]:
-            if state["can_enter_right"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width - 100, display_height / 2 - 50, 100, 100):
+            if state["can_enter_right"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width - 100, display_height / 2 - 50, 100, 100) and not state["e_just_pressed"]:
                 if pygame.key.get_pressed()[pygame.K_e]:
                     new_room(state["room"] + 1, state["room_list"][state["room"] + 1]["entered"], state, "left")
-            elif state["can_enter_bottom"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, display_height - 100, 100, 100):
+            elif state["can_enter_bottom"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, display_height - 100, 100, 100) and not state["e_just_pressed"]:
                 if pygame.key.get_pressed()[pygame.K_e]:
                     new_room(state["room"] + 3, state["room_list"][state["room"] + 3]["entered"], state, "top")
-            elif state["can_enter_left"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, 0, display_height / 2 - 50, 100, 100):
+            elif state["can_enter_left"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, 0, display_height / 2 - 50, 100, 100) and not state["e_just_pressed"]:
                 if pygame.key.get_pressed()[pygame.K_e]:
                     new_room(state["room"] - 1, state["room_list"][state["room"] - 1]["entered"], state, "right")
-            elif state["can_enter_top"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, 0, 100, 100):
+            elif state["can_enter_top"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, 0, 100, 100) and not state["e_just_pressed"]:
                 if pygame.key.get_pressed()[pygame.K_e]:
                     new_room(state["room"] - 3, state["room_list"][state["room"] - 3]["entered"], state, "bottom")
 
