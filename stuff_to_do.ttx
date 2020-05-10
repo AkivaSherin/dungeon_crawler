@@ -14,6 +14,7 @@ add bad guys
 -eventually make them smarter
 -cant walk on top of eachother
 -bad guys drop stuff
+-- show how much money
 
 more enemies
 
@@ -25,4 +26,4 @@ long term
 -cx freeze
 -intro screen and death screen
 -multiple characters
---each character has special ability adn traits
+--each character has special ability and traits

@@ -32,6 +32,10 @@ pixel_heart_width = 45
 pixel_heart_height = 45
 melee_swoosh_width = 100
 melee_swoosh_height = 50
+coin_width = 25
+coin_height = 25
+big_coin_width = 40
+big_coin_height = 40
 
 game_display = pygame.display.set_mode((display_width, display_height))
 pygame.display.set_caption("Dungeon_Explorer")
@@ -59,12 +63,15 @@ half_heart = pygame.transform.scale(half_heart, (pixel_heart_width, pixel_heart_
 pixel_guy_swinging = pygame.image.load("pixel_guy_360_swing.png").convert_alpha()
 pixel_guy_swinging = pygame.transform.scale(pixel_guy_swinging, (pixel_guy_width, pixel_guy_height))
 pixel_guy_swinging = pygame.transform.rotate(pixel_guy_swinging, -90)
-pixel_question_mark = pygame.image.load("pixel_question_mark.png")
+pixel_question_mark = pygame.image.load("pixel_question_mark.png").convert_alpha()
 pixel_question_mark = pygame.transform.scale(pixel_question_mark, (150, 150))
-pixel_boss_logo = pygame.image.load("pixel_boss_logo.png")
+pixel_boss_logo = pygame.image.load("pixel_boss_logo.png").convert_alpha()
 pixel_boss_logo = pygame.transform.scale(pixel_boss_logo, (150, 150))
-pixel_coin = pygame.image.load("pixel_coin.png")
-pixel_coin = pygame.transform.scale(pixel_coin, (150, 150))
+pixel_shop_logo = pygame.image.load("pixel_shop_logo.png").convert_alpha()
+pixel_shop_logo = pygame.transform.scale(pixel_shop_logo, (150, 150))
+pixel_coin = pygame.image.load("pixel_coin.png").convert_alpha()
+pixel_coin = pygame.transform.scale(pixel_coin, (coin_width, coin_height))
+bigger_coin = pygame.transform.scale(pixel_coin, (big_coin_width, big_coin_height))
 
 border_0 = pygame.image.load("border_top_left.png").convert_alpha()
 border_0 = pygame.transform.scale(border_0, (display_width, display_height))
@@ -295,7 +302,7 @@ def shop_square():
     border_width = 10
     pygame.draw.rect(game_display, yellow, (700, 700, 200, 200))
     pygame.draw.rect(game_display, black, (700 + border_width, 700 + border_width, 200 - 2 * border_width, 200 - 2 * border_width))
-    game_display.blit(pixel_coin, (725, 725))
+    game_display.blit(pixel_shop_logo, (725, 725))
 
 
 def map_square(room, x, y, state):
@@ -347,6 +354,9 @@ def map_screen(state):
 
 
 def display_stuff(state):
+    for i in range(state["num_of_coins"]):
+        if state["coin_exist"][i]:
+            game_display.blit(pixel_coin, (state["coin_x"][i], state["coin_y"][i]))
     if state["melee_timer"] > 0:
         blit_rotate_center(game_display, pixel_guy_swinging, (state["pixel_guy_x"], state["pixel_guy_y"]), state["pixel_guy_rotation"])
     else:
@@ -363,6 +373,7 @@ def display_stuff(state):
         if state["gun_zombie_exist"][i]:
             gun_zombie(state["gun_zombie_x"][i], state["gun_zombie_y"][i], state["gun_zombie_rotation"][i])
     game_display.blit(border_list[state["room"]], (0, 0))
+    show_money(state["coins_possessed"])
     show_health(state["pixel_guy_health"])
     show_ammo_bar(state["ammo"])
     give_prompt(state["prompt"])
@@ -394,6 +405,11 @@ def pellet_hit_zombie(state):
                         state["gun_zombie_health"][i] -= 1
                         if state["gun_zombie_health"][i] <= 0:
                             state["gun_zombie_exist"][i] = False
+                            if random.randrange(0, 3) == 2:
+                                state["coin_x"].append(state["gun_zombie_x"][i] + gun_zombie_width / 2)
+                                state["coin_y"].append(state["gun_zombie_y"][i] + gun_zombie_height / 2)
+                                state["coin_exist"].append(True)
+                                state["num_of_coins"] += 1
 
 
 def reload(state):
@@ -501,6 +517,11 @@ def melee(state):
                 state["gun_zombie_health"][i] -= 5
                 if state["gun_zombie_health"][i] <= 0:
                     state["gun_zombie_exist"][i] = False
+                    if random.randrange(0, 3) == 2:
+                        state["coin_x"].append(state["gun_zombie_x"][i] + gun_zombie_width / 2)
+                        state["coin_y"].append(state["gun_zombie_y"][i] + gun_zombie_height / 2)
+                        state["coin_exist"].append(True)
+                        state["num_of_coins"] += 1
 
 
 def fire_pellet(state):
@@ -761,6 +782,13 @@ def death_screen():
         pygame.display.update()
 
 
+def show_money(coins):
+    game_display.blit(bigger_coin, (10, 10))
+    font = pygame.font.SysFont("comicsansms", 41)
+    text = font.render(str(coins), True, black)
+    game_display.blit(text, (20 + big_coin_width, 0))
+
+
 def show_health(health):
     if health == 1:
         game_display.blit(half_heart, (10, display_height - pixel_heart_height))
@@ -866,6 +894,42 @@ def pixel_guy(image, x, y):
     game_display.blit(image, (x, y))
 
 
+def get_room_type(room, state):
+    return state["room_list"][room]["room_type"]
+
+
+def get_room_rotation(room, state):
+    return state["room_list"][room]["room_rotation"]
+
+
+def get_room_entered(room, state):
+    return state["room_list"][room]["entered"]
+
+
+def enter_room(state):
+    if state["current_room_cleared"]:
+        if state["can_enter_right"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width - 100, display_height / 2 - 50, 100, 100) and not state["e_just_pressed"]:
+            if pygame.key.get_pressed()[pygame.K_e]:
+                new_room(state["room"] + 1, state["room_list"][state["room"] + 1]["entered"], state, "left")
+        elif state["can_enter_bottom"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, display_height - 100, 100, 100) and not state["e_just_pressed"]:
+            if pygame.key.get_pressed()[pygame.K_e]:
+                new_room(state["room"] + 3, state["room_list"][state["room"] + 3]["entered"], state, "top")
+        elif state["can_enter_left"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, 0, display_height / 2 - 50, 100, 100) and not state["e_just_pressed"]:
+            if pygame.key.get_pressed()[pygame.K_e]:
+                new_room(state["room"] - 1, state["room_list"][state["room"] - 1]["entered"], state, "right")
+        elif state["can_enter_top"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, 0, 100, 100) and not state["e_just_pressed"]:
+            if pygame.key.get_pressed()[pygame.K_e]:
+                new_room(state["room"] - 3, state["room_list"][state["room"] - 3]["entered"], state, "bottom")
+
+
+def pick_up_coins(state):
+    for i in range(state["num_of_coins"]):
+        if state["coin_exist"][i]:
+            if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, state["coin_x"][i], state["coin_y"][i], coin_width, coin_height):
+                state["coins_possessed"] += 1
+                state["coin_exist"][i] = False
+
+
 def new_room(new_room_number, entered, state, side_entered):
     state["room"] = new_room_number
     state["current_room_cleared"] = False
@@ -937,6 +1001,11 @@ def new_room(new_room_number, entered, state, side_entered):
     state["num_of_gun_zombies"] = len(state["gun_zombie_x"])
     state["e_just_pressed"] = True
 
+    state["coin_x"] = []
+    state["coin_y"] = []
+    state["coin_exist"] = []
+    state["num_of_coins"] = 0
+
     for i in range(state["num_of_gun_zombies"]):
         state["gun_zombie_health"].append(state["gun_zombie_max_health"])
         state["gun_zombie_exist"].append(True)
@@ -951,18 +1020,6 @@ def new_room(new_room_number, entered, state, side_entered):
         state["gun_zombie_y"][i] *= wall_height
 
     state["num_of_walls"] = len(state["wall_list_x"])
-
-
-def get_room_type(room, state):
-    return state["room_list"][room]["room_type"]
-
-
-def get_room_rotation(room, state):
-    return state["room_list"][room]["room_rotation"]
-
-
-def get_room_entered(room, state):
-    return state["room_list"][room]["entered"]
 
 
 def new_level():
@@ -1070,6 +1127,13 @@ def new_level():
         "gun_zombie_timer": [],
         "gun_zombie_speed_x": [],
         "gun_zombie_speed_y": [],
+
+        "coin_x": [],
+        "coin_y": [],
+        "coin_exist": [],
+        "num_of_coins": 0,
+        "coins_possessed": 0,
+
         "prompt": "",
         "mouse_click": "",
         "crosshair_coordinates": "",
@@ -1112,6 +1176,8 @@ def new_level():
 
         stop_stuff_at_wall(state)
 
+        pick_up_coins(state)
+
         starting_move_timer(state)
 
         move_stuff(state)
@@ -1128,19 +1194,7 @@ def new_level():
 
         clock.tick(60)
 
-        if state["current_room_cleared"]:
-            if state["can_enter_right"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width - 100, display_height / 2 - 50, 100, 100) and not state["e_just_pressed"]:
-                if pygame.key.get_pressed()[pygame.K_e]:
-                    new_room(state["room"] + 1, state["room_list"][state["room"] + 1]["entered"], state, "left")
-            elif state["can_enter_bottom"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, display_height - 100, 100, 100) and not state["e_just_pressed"]:
-                if pygame.key.get_pressed()[pygame.K_e]:
-                    new_room(state["room"] + 3, state["room_list"][state["room"] + 3]["entered"], state, "top")
-            elif state["can_enter_left"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, 0, display_height / 2 - 50, 100, 100) and not state["e_just_pressed"]:
-                if pygame.key.get_pressed()[pygame.K_e]:
-                    new_room(state["room"] - 1, state["room_list"][state["room"] - 1]["entered"], state, "right")
-            elif state["can_enter_top"] and find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, 0, 100, 100) and not state["e_just_pressed"]:
-                if pygame.key.get_pressed()[pygame.K_e]:
-                    new_room(state["room"] - 3, state["room_list"][state["room"] - 3]["entered"], state, "bottom")
+        enter_room(state)
 
 
 new_level()
