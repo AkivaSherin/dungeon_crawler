@@ -299,8 +299,6 @@ def shop_square():
 
 
 def map_square(room, x, y, state):
-    wall_list_x = []
-    wall_list_y = []
     if state["room"] == room:
         pygame.draw.rect(game_display, dirt_color, (x, y, 200, 200))
         for i in range(state["num_of_walls"]):
@@ -310,26 +308,10 @@ def map_square(room, x, y, state):
                 pygame.draw.rect(game_display, green, (x + math.floor(state["gun_zombie_x"][i] / 5), y + math.floor(state["gun_zombie_y"][i] / 5), 16, 16))
         game_display.blit(tiny_pixel_guy, (x + math.floor(state["pixel_guy_x"] / 5), y + math.floor(state["pixel_guy_y"] / 5)))
 
-    elif state["room_entered"][room]:
+    elif get_room_entered(room, state):
         pygame.draw.rect(game_display, green, (x, y, 200, 200))
-        if state["room_rotations"] == "bottom":
-            wall_list_x = wall_list_list_x_bottom[state["room_types"][room]]
-            wall_list_y = wall_list_list_y_bottom[state["room_types"][room]]
-        elif state["room_rotations"] == "top":
-            print("hi")
-            wall_list_x = wall_list_list_x_top[state["room_types"][room]]
-            wall_list_y = wall_list_list_y_top[state["room_types"][room]]
-        elif state["room_rotations"] == "left":
-            print("hi")
-            wall_list_x = wall_list_list_x_left[state["room_types"][room]]
-            wall_list_y = wall_list_list_y_left[state["room_types"][room]]
-        elif state["room_rotations"] == "right":
-            print("hi")
-            wall_list_x = wall_list_list_x_right[state["room_types"][room]]
-            wall_list_y = wall_list_list_y_right[state["room_types"][room]]
-        for i in range(len(wall_list_x)):
-            pygame.draw.rect(game_display, gray, (x + wall_list_x[i] * 10, y + wall_list_y[i] * 10, 10, 10))
-            print("hi")
+        for i in range(len(wall_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)])):
+            pygame.draw.rect(game_display, gray, (x + wall_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)][i] * 10, y + wall_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)][i] * 10, 10, 10))
     else:
         pygame.draw.rect(game_display, red, (x, y, 200, 200))
         game_display.blit(pixel_question_mark, (x + 25, y + 25))
@@ -587,8 +569,7 @@ def event_handling(state):
 def set_aiming_variables(state):
     state["mouse_click"] = pygame.mouse.get_pressed()
     state["mouse_coordinates"] = pygame.mouse.get_pos()
-    state["crosshair_coordinates"] = (
-    state["mouse_coordinates"][0] - crosshair_width / 2, state["mouse_coordinates"][1] - crosshair_height / 2)
+    state["crosshair_coordinates"] = (state["mouse_coordinates"][0] - crosshair_width / 2, state["mouse_coordinates"][1] - crosshair_height / 2)
     state["aim_x"] = state["crosshair_coordinates"][0] - (state["pixel_guy_x"] + 40)
     state["aim_y"] = state["crosshair_coordinates"][1] - (state["pixel_guy_y"] + 40)
 
@@ -679,35 +660,30 @@ def set_loop_variables(state):
         state["can_enter_bottom"] = False
 
 
-def set_room_types(state, rooms_chosen):
+def set_room_types(state):
     type_chosen = random.randrange(0, state["num_of_room_types"])
     type_taken = False
-    for i in range(len(state["room_types"])):
-        if type_chosen == state["room_types"][i]:
+    for i in range(len(state["types_taken"])):
+        if type_chosen == state["types_taken"][i]:
             type_taken = True
     if not type_taken:
         return type_chosen
     else:
-        return set_room_types(state, rooms_chosen)
+        return set_room_types(state)
 
 
 def set_pre_level_variables(state):
-    rooms_chosen = []
     for i in range(9):
-        if i == 4:
-            state["room_types"].append("boss")
-        elif i == 8:
-            state["room_types"].append("shop")
-        else:
-            type_chosen = set_room_types(state, rooms_chosen)
-            state["room_types"].append(type_chosen)
-            rooms_chosen.append(type_chosen)
+        if i != 4 and i != 8:
+            type_chosen = set_room_types(state)
+            state["types_taken"].append(type_chosen)
+            state["room_list"][i]["room_type"] = type_chosen
 
     state["ammo"] = state["max_ammo"]
-    state["wall_list_x"] = wall_list_list_x_bottom[state["room_types"][state["room"]]]
-    state["wall_list_y"] = wall_list_list_y_bottom[state["room_types"][state["room"]]]
-    state["gun_zombie_x"] = gun_zombie_list_list_x_bottom[state["room_types"][state["room"]]]
-    state["gun_zombie_y"] = gun_zombie_list_list_y_bottom[state["room_types"][state["room"]]]
+    state["wall_list_x"] = wall_list_list_x_bottom[get_room_type(state["room"], state)]
+    state["wall_list_y"] = wall_list_list_y_bottom[get_room_type(state["room"], state)]
+    state["gun_zombie_x"] = gun_zombie_list_list_x_bottom[get_room_type(state["room"], state)]
+    state["gun_zombie_y"] = gun_zombie_list_list_y_bottom[get_room_type(state["room"], state)]
     state["num_of_gun_zombies"] = len(state["gun_zombie_x"])
 
     for i in range(state["num_of_gun_zombies"]):
@@ -889,14 +865,15 @@ def pixel_guy(image, x, y):
 def new_room(new_room_number, entered, state, side_entered):
     state["room"] = new_room_number
     state["current_room_cleared"] = False
+    state["room_list"][new_room_number]["entered"] = True
 
     if not entered:
-        state["room_rotations"][state["room"]] = side_entered
-        state["gun_zombie_x"] = gun_zombie_dictionary_x[state["room_rotations"][state["room"]]][state["room_types"][state["room"]]]
-        state["gun_zombie_y"] = gun_zombie_dictionary_y[state["room_rotations"][state["room"]]][state["room_types"][state["room"]]]
+        state["room_list"][state["room"]]["room_rotation"] = side_entered
+        state["gun_zombie_x"] = gun_zombie_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)]
+        state["gun_zombie_y"] = gun_zombie_dictionary_y[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)]
 
-    state["wall_list_x"] = wall_dictionary_x[state["room_rotations"][state["room"]]][state["room_types"][state["room"]]]
-    state["wall_list_y"] = wall_dictionary_y[state["room_rotations"][state["room"]]][state["room_types"][state["room"]]]
+    state["wall_list_x"] = wall_dictionary_x[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)]
+    state["wall_list_y"] = wall_dictionary_y[get_room_rotation(state["room"], state)][get_room_type(state["room"], state)]
 
     if side_entered == "bottom":
         state["pixel_guy_x"] = (display_width - pixel_guy_width) / 2
@@ -967,14 +944,70 @@ def new_room(new_room_number, entered, state, side_entered):
     state["num_of_walls"] = len(state["wall_list_x"])
 
 
+def get_room_type(room, state):
+    return state["room_list"][room]["room_type"]
+
+
+def get_room_rotation(room, state):
+    return state["room_list"][room]["room_rotation"]
+
+
+def get_room_entered(room, state):
+    return state["room_list"][room]["entered"]
+
+
 def new_level():
+    room_0 = {
+        "room_type": "",
+        "room_rotation": "bottom",
+        "entered": True
+    }
+    room_1 = {
+        "room_type": "",
+        "room_rotation": "",
+        "entered": False
+    }
+    room_2 = {
+        "room_type": "",
+        "room_rotation": "",
+        "entered": False
+    }
+    room_3 = {
+        "room_type": "",
+        "room_rotation": "",
+        "entered": False
+    }
+    room_4 = {
+        "room_type": "",
+        "room_rotation": "",
+        "entered": False
+    }
+    room_5 = {
+        "room_type": "",
+        "room_rotation": "",
+        "entered": False
+    }
+    room_6 = {
+        "room_type": "",
+        "room_rotation": "",
+        "entered": False
+    }
+    room_7 = {
+        "room_type": "",
+        "room_rotation": "",
+        "entered": False
+    }
+    room_8 = {
+        "room_type": "",
+        "room_rotation": "",
+        "entered": False
+    }
     state = {
         "room": 0,
-        "room_types": [],
-        "room_rotations": ["bottom", "", "", "", "", "", ""],
-        "num_of_room_types": len(wall_list_list_x_left),
-        "room_entered": [True, False, False, False, False, False, False, False, False],
+        "room_list": [room_0, room_1, room_2, room_3, room_4, room_5, room_6, room_7, room_8],
+        "num_of_room_types": len(wall_list_list_x_bottom),
         "current_room_cleared": True,
+        "types_taken": [],
         "can_enter_top": False,
         "can_enter_bottom": False,
         "can_enter_left": False,
@@ -1089,19 +1122,19 @@ def new_level():
             if state["can_enter_right"]:
                 if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width - 100, display_height / 2 - 50, 100, 100):
                     if pygame.key.get_pressed()[pygame.K_e]:
-                        new_room(state["room"] + 1, state["room_entered"][state["room"] + 1], state, "left")
-            if state["can_enter_bottom"]:
+                        new_room(state["room"] + 1, state["room_list"][state["room"] + 1]["entered"], state, "left")
+            elif state["can_enter_bottom"]:
                 if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, display_height - 100, 100, 100):
                     if pygame.key.get_pressed()[pygame.K_e]:
-                        new_room(state["room"] + 3, state["room_entered"][state["room"] + 3], state, "top")
-            if state["can_enter_left"]:
+                        new_room(state["room"] + 3, state["room_list"][state["room"] + 3]["entered"], state, "top")
+            elif state["can_enter_left"]:
                 if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, 0, display_height / 2 - 50, 100, 100):
                     if pygame.key.get_pressed()[pygame.K_e]:
-                        new_room(state["room"] - 1, state["room_entered"][state["room"] - 1], state, "right")
-            if state["can_enter_top"]:
+                        new_room(state["room"] - 1, state["room_list"][state["room"] - 1]["entered"], state, "right")
+            elif state["can_enter_top"]:
                 if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, display_width / 2 - 50, 0, 100, 100):
                     if pygame.key.get_pressed()[pygame.K_e]:
-                        new_room(state["room"] - 3, state["room_entered"][state["room"] - 3], state, "bottom")
+                        new_room(state["room"] - 3, state["room_list"][state["room"] - 3]["entered"], state, "bottom")
 
 
 new_level()

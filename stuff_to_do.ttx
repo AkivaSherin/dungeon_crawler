@@ -4,6 +4,7 @@ fix all of the glitches
 -room dictionaries
 
 map
+-get rid of cooldown(its unnecessary)_
 -rotate pixel guy
 -maybe make green squares zombie images
 
@@ -18,5 +19,11 @@ add bad guys
 more enemies
 
 add floors and levels
+-boss battle
+-shop
 
-put guy where he entered
+long term
+-cx freeze
+-intro screen and death screen
+-multiple characters
+--each character has special ability
