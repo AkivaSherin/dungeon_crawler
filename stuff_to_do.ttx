@@ -9,19 +9,24 @@ map
 
 random.shuffle
 
-
-add bad guys
--eventually make them smarter
--cant walk on top of eachother
--bad guys drop stuff
--- show how much money
-
-more enemies
+deepen combat
+-add more bad guys
+--eventually make them smarter
+--cant walk on top of eachother
+-make zombies red when you hit them
+-building
+-grenades
+-shotguns
 
 add floors and levels
 -boss battle
 -shop
-
+--inventory
+---melee weapons
+---amulets
+---potions
+--item dict
+---alphabetize items
 long term
 -cx freeze
 -intro screen and death screen
