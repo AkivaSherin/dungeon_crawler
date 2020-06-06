@@ -76,6 +76,8 @@ stone_wall = pygame.image.load("stone_wall.png").convert_alpha()
 stone_wall = pygame.transform.scale(stone_wall, (wall_width, wall_height))
 gun_zombie_image = pygame.image.load("pixel_zombie_with_guns.png").convert_alpha()
 gun_zombie_image = pygame.transform.scale(gun_zombie_image, (gun_zombie_width, gun_zombie_height))
+gun_zombie_red_image = pygame.image.load("pixel_zombie_red.png").convert_alpha()
+gun_zombie_red_image = pygame.transform.scale(gun_zombie_red_image, (gun_zombie_width, gun_zombie_height))
 red_pixel_pellet = pygame.image.load("red_pixel_pellet.png").convert_alpha()
 red_pixel_pellet = pygame.transform.scale(red_pixel_pellet, (pixel_pellet_width, pixel_pellet_height))
 heart = pygame.image.load("full_pixel_heart.png").convert_alpha()
@@ -442,7 +444,10 @@ def display_stuff(state):
         wall(state["wall_list_x"][i], state["wall_list_y"][i])
     for i in range(state["num_of_gun_zombies"]):
         if state["gun_zombie_exist"][i]:
-            gun_zombie(state["gun_zombie_x"][i], state["gun_zombie_y"][i], state["gun_zombie_rotation"][i])
+            if state["gun_zombie_shot_timer"][i] > 0:
+                gun_zombie_red(state["gun_zombie_x"][i], state["gun_zombie_y"][i], state["gun_zombie_rotation"][i])
+            else:
+                gun_zombie(state["gun_zombie_x"][i], state["gun_zombie_y"][i], state["gun_zombie_rotation"][i])
     game_display.blit(border_list[state["room"]], (0, 0))
     show_money(state["coins_possessed"])
     show_health(state["pixel_guy_health"])
@@ -473,6 +478,7 @@ def bullet_hit_zombie(state):
                 if state["bullet_exist"][j]:
                     if find_if_overlapping(state["pixel_bullet_x"][j], state["pixel_bullet_y"][j], pixel_bullet_width, pixel_bullet_height, state["gun_zombie_x"][i], state["gun_zombie_y"][i], gun_zombie_width, gun_zombie_height):
                         state["bullet_exist"][j] = False
+                        state["gun_zombie_shot_timer"][i] = state["damage_image_length"]
                         state["gun_zombie_health"][i] -= state["equipped_bullet_dict"]["damage"]
                         if state["gun_zombie_health"][i] <= 0:
                             state["gun_zombie_exist"][i] = False
@@ -580,7 +586,7 @@ def melee(state):
         state["melee_cooldown"] = 60
         state["melee_timer"] = 20
         for i in range(state["num_of_gun_zombies"]):
-            if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height,state["gun_zombie_x"][i], state["gun_zombie_y"][i], gun_zombie_width,gun_zombie_height):
+            if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, state["gun_zombie_x"][i], state["gun_zombie_y"][i], gun_zombie_width,gun_zombie_height):
                 state["gun_zombie_health"][i] -= 5
                 if state["gun_zombie_health"][i] <= 0:
                     state["gun_zombie_exist"][i] = False
@@ -699,6 +705,8 @@ def set_loop_variables(state):
             state["current_room_cleared"] = False
         if state["gun_zombie_timer"][i] > 0:
             state["gun_zombie_timer"][i] -= 1
+        if state["gun_zombie_shot_timer"][i] > 0:
+            state["gun_zombie_shot_timer"][i] -= 1
     if state["starting_game_timer"] > 0:
         state["starting_game_timer"] -= 1
     if state["map_cooldown"] > 0:
@@ -793,6 +801,7 @@ def set_pre_level_variables(state):
         state["gun_zombie_rotation"].append(90)
         state["gun_zombie_has_los"].append(True)
         state["gun_zombie_timer"].append(0)
+        state["gun_zombie_shot_timer"].append(0)
         state["gun_zombie_speed_x"].append(0)
         state["gun_zombie_speed_y"].append(0)
         state["gun_zombie_x"][i] *= wall_width
@@ -954,6 +963,10 @@ def blit_rotate_center(surf, image, topleft, angle=1):
 
 def gun_zombie(x, y, rotation):
     blit_rotate_center(game_display, gun_zombie_image, (x, y), rotation)
+
+
+def gun_zombie_red(x, y, rotation):
+    blit_rotate_center(game_display, gun_zombie_red_image, (x, y), rotation)
 
 
 def bullet(image, x, y, rotation):
@@ -1654,6 +1667,7 @@ def new_room(new_room_number, entered, state, side_entered):
     state["gun_zombie_timer"] = []
     state["gun_zombie_speed_x"] = []
     state["gun_zombie_speed_y"] = []
+    state["gun_zombie_shot_timer"] = []
     state["num_of_gun_zombies"] = len(state["gun_zombie_x"])
     state["e_just_pressed"] = True
 
@@ -1674,6 +1688,7 @@ def new_room(new_room_number, entered, state, side_entered):
         state["gun_zombie_speed_y"].append(0)
         state["gun_zombie_x"][i] *= wall_width
         state["gun_zombie_y"][i] *= wall_height
+        state["gun_zombie_shot_timer"].append(0)
 
     state["num_of_walls"] = len(state["wall_list_x"])
 
@@ -1961,6 +1976,7 @@ def new_level():
         "gun_zombie_timer": [],
         "gun_zombie_speed_x": [],
         "gun_zombie_speed_y": [],
+        "gun_zombie_shot_timer": [],
 
         "coin_x": [],
         "coin_y": [],
@@ -1983,7 +1999,8 @@ def new_level():
         "image_rect": "",
         "pixel_guy_rotation": "",
         "e_just_pressed": "",
-        "equipped_bullet_dict": ""
+        "equipped_bullet_dict": "",
+        "damage_image_length": 15
     }
 
     set_pre_level_variables(state)
