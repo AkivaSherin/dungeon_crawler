@@ -1341,6 +1341,14 @@ def inventory_screen(state):
                     quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_i:
+                        state["sights_drop_downing"] = False
+                        state["sights_editing"] = [False, 0, ""]
+                        state["ammo_drop_downing"] = False
+                        state["ammo_editing"] = [False, 0, ""]
+                        state["magazines_drop_downing"] = False
+                        state["magazines_editing"] = [False, 0, ""]
+                        state["barrel_drop_downing"] = False
+                        state["barrel_editing"] = [False, 0, ""]
                         pygame.mouse.set_visible(False)
                         screening = False
                     if event.key == pygame.K_ESCAPE:
@@ -1443,6 +1451,9 @@ def inventory_screen(state):
                     quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_i:
+                        state["potions_editing"] = [False, 0, 0]
+                        state["amulets_editing"] = [False, 0]
+                        state["melee_editing"] = [False, 0]
                         pygame.mouse.set_visible(False)
                         screening = False
                     if event.key == pygame.K_ESCAPE:
