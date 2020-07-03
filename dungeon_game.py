@@ -78,6 +78,8 @@ gun_zombie_image = pygame.image.load("pixel_zombie_with_guns.png").convert_alpha
 gun_zombie_image = pygame.transform.scale(gun_zombie_image, (gun_zombie_width, gun_zombie_height))
 gun_zombie_red_image = pygame.image.load("pixel_zombie_red.png").convert_alpha()
 gun_zombie_red_image = pygame.transform.scale(gun_zombie_red_image, (gun_zombie_width, gun_zombie_height))
+gun_zombie_frozen_image = pygame.image.load("pixel_frozem_zombie.png").convert_alpha()
+gun_zombie_frozen_image = pygame.transform.scale(gun_zombie_frozen_image, (gun_zombie_width, gun_zombie_height))
 red_pixel_pellet = pygame.image.load("red_pixel_pellet.png").convert_alpha()
 red_pixel_pellet = pygame.transform.scale(red_pixel_pellet, (pixel_pellet_width, pixel_pellet_height))
 heart = pygame.image.load("full_pixel_heart.png").convert_alpha()
@@ -145,6 +147,15 @@ pixel_hammer = pygame.image.load("pixel_hammer.png").convert_alpha()
 pixel_hammer = pygame.transform.scale(pixel_hammer, (item_width, item_height))
 pixel_hammer_highlighted = pygame.image.load("pixel_hammer_highlighted.png").convert_alpha()
 pixel_hammer_highlighted = pygame.transform.scale(pixel_hammer_highlighted, (item_width, item_height))
+pixel_melee_fists_north = pygame.image.load("pixel_melee_fists.png").convert_alpha()
+pixel_melee_fists_north = pygame.transform.scale(pixel_melee_fists_north, (pixel_guy_width, pixel_guy_height))
+pixel_melee_fists = pygame.transform.rotate(pixel_melee_fists_north, -90)
+pixel_melee_hammer_north = pygame.image.load("pixel_melee_hammer.png").convert_alpha()
+pixel_melee_hammer_north = pygame.transform.scale(pixel_melee_hammer_north, (pixel_guy_width, pixel_guy_height))
+pixel_melee_hammer = pygame.transform.rotate(pixel_melee_hammer_north, -90)
+pixel_melee_ice_sword_north = pygame.image.load("pixel_melee_ice_sword.png").convert_alpha()
+pixel_melee_ice_sword_north = pygame.transform.scale(pixel_melee_ice_sword_north, (pixel_guy_width, pixel_guy_height))
+pixel_melee_ice_sword = pygame.transform.rotate(pixel_melee_ice_sword_north, -90)
 
 border_0 = pygame.image.load("border_top_left.png").convert_alpha()
 border_0 = pygame.transform.scale(border_0, (display_width, display_height))
@@ -431,7 +442,7 @@ def display_stuff(state):
         if state["coin_exist"][i]:
             game_display.blit(pixel_coin, (state["coin_x"][i], state["coin_y"][i]))
     if state["melee_timer"] > 0:
-        blit_rotate_center(game_display, pixel_guy_swinging, (state["pixel_guy_x"], state["pixel_guy_y"]), state["pixel_guy_rotation"])
+        blit_rotate_center(game_display, state["equipped_melee_dict"]["swinging_image"], (state["pixel_guy_x"], state["pixel_guy_y"]), state["pixel_guy_rotation"])
     else:
         blit_rotate_center(game_display, pixel_guy_east, (state["pixel_guy_x"], state["pixel_guy_y"]), state["pixel_guy_rotation"])
     for i in range(state["num_of_pixel_bullets"]):
@@ -446,6 +457,8 @@ def display_stuff(state):
         if state["gun_zombie_exist"][i]:
             if state["gun_zombie_shot_timer"][i] > 0:
                 gun_zombie_red(state["gun_zombie_x"][i], state["gun_zombie_y"][i], state["gun_zombie_rotation"][i])
+            elif state["gun_zombie_frozen_timer"][i] > 0:
+                gun_zombie_frozen(state["gun_zombie_x"][i], state["gun_zombie_y"][i], state["gun_zombie_rotation"][i])
             else:
                 gun_zombie(state["gun_zombie_x"][i], state["gun_zombie_y"][i], state["gun_zombie_rotation"][i])
     game_display.blit(border_list[state["room"]], (0, 0))
@@ -480,6 +493,8 @@ def bullet_hit_zombie(state):
                         state["bullet_exist"][j] = False
                         state["gun_zombie_shot_timer"][i] = state["damage_image_length"]
                         state["gun_zombie_health"][i] -= state["equipped_bullet_dict"]["damage"]
+                        if state["equipped_bullet_dict"]["name"] == "Ice Ammo":
+                            state["gun_zombie_frozen_timer"][i] += 120
                         if state["gun_zombie_health"][i] <= 0:
                             state["gun_zombie_exist"][i] = False
                             if random.randrange(0, 3) == 2:
@@ -522,7 +537,7 @@ def stop_stuff_at_wall(state):
     for j in range(state["num_of_gun_zombies"]):
         for i in range(state["num_of_walls"]):
             if state["gun_zombie_exist"][j]:
-                if find_if_overlapping(state["gun_zombie_x"][j] + state["gun_zombie_speed_x"][j],state["gun_zombie_y"][j], gun_zombie_width, gun_zombie_height, state["wall_list_x"][i] * wall_width, state["wall_list_y"][i] * wall_height, wall_width, wall_height):
+                if find_if_overlapping(state["gun_zombie_x"][j] + state["gun_zombie_speed_x"][j], state["gun_zombie_y"][j], gun_zombie_width, gun_zombie_height, state["wall_list_x"][i] * wall_width, state["wall_list_y"][i] * wall_height, wall_width, wall_height):
                     state["gun_zombie_speed_x"][j] = 0
                 if find_if_overlapping(state["gun_zombie_x"][j], state["gun_zombie_y"][j] + state["gun_zombie_speed_y"][j], gun_zombie_width, gun_zombie_height, state["wall_list_x"][i] * wall_width, state["wall_list_y"][i] * wall_height, wall_width, wall_height):
                     state["gun_zombie_speed_y"][j] = 0
@@ -546,8 +561,8 @@ def zombie_decide_if_to_move(state):
     for i in range(state["num_of_gun_zombies"]):
         if not state["gun_zombie_has_los"][i]:
             if state["gun_zombie_exist"][i]:
-                state["gun_zombie_speed_x"][i] = 2 * math.cos(math.radians(state["gun_zombie_rotation"][i]))
-                state["gun_zombie_speed_y"][i] = -2 * math.sin(math.radians(state["gun_zombie_rotation"][i]))
+                state["gun_zombie_speed_x"][i] = state["gun_zombie_speed"][i] * math.cos(math.radians(state["gun_zombie_rotation"][i]))
+                state["gun_zombie_speed_y"][i] = -1 * state["gun_zombie_speed"][i] * math.sin(math.radians(state["gun_zombie_rotation"][i]))
         else:
             state["gun_zombie_speed_x"][i] = 0
             state["gun_zombie_speed_y"][i] = 0
@@ -570,7 +585,10 @@ def gun_zombies_shoot(state):
                     state["red_pellet_direction_y"].append(-7 * math.sin(math.radians(state["gun_zombie_rotation"][i])))
                     state["red_pellet_exist"].append(True)
                     state["num_of_red_pixel_pellets"] += 1
-                    state["gun_zombie_timer"][i] = 45
+                    if state["gun_zombie_frozen_timer"][i] > 0:
+                        state["gun_zombie_timer"][i] = 90
+                    else:
+                        state["gun_zombie_timer"][i] = 45
 
 
 def find_if_los(state):
@@ -583,11 +601,14 @@ def find_if_los(state):
 
 def melee(state):
     if state["mouse_click"][2] == 1 and state["melee_cooldown"] == 0 and state["dashing_timer"] == 0:
-        state["melee_cooldown"] = 60
+        state["melee_cooldown"] = state["equipped_melee_dict"]["delay"]
         state["melee_timer"] = 20
         for i in range(state["num_of_gun_zombies"]):
             if find_if_overlapping(state["pixel_guy_x"], state["pixel_guy_y"], pixel_guy_width, pixel_guy_height, state["gun_zombie_x"][i], state["gun_zombie_y"][i], gun_zombie_width,gun_zombie_height):
-                state["gun_zombie_health"][i] -= 5
+                state["gun_zombie_health"][i] -= state["equipped_melee_dict"]["damage"]
+                state["gun_zombie_shot_timer"][i] = state["damage_image_length"]
+                if state["equipped_melee_dict"]["name"] == "Frost Sword":
+                    state["gun_zombie_frozen_timer"][i] += 180
                 if state["gun_zombie_health"][i] <= 0:
                     state["gun_zombie_exist"][i] = False
                     if random.randrange(0, 3) == 2:
@@ -707,6 +728,12 @@ def set_loop_variables(state):
             state["gun_zombie_timer"][i] -= 1
         if state["gun_zombie_shot_timer"][i] > 0:
             state["gun_zombie_shot_timer"][i] -= 1
+        if state["gun_zombie_frozen_timer"][i] > 0:
+            state["gun_zombie_frozen_timer"][i] -= 1
+            state["gun_zombie_speed"][i] = 1
+        else:
+            state["gun_zombie_speed"][i] = 2
+
     if state["starting_game_timer"] > 0:
         state["starting_game_timer"] -= 1
     if state["map_cooldown"] > 0:
@@ -766,6 +793,13 @@ def set_loop_variables(state):
         if state["ammo_list"][i]["equipped"]:
             state["equipped_bullet_dict"] = state["ammo_list"][i]
 
+    for i in range(len(state["melee_list"])):
+        if state["melee_list"][i]["equipped"]:
+            state["equipped_melee_dict"] = state["melee_list"][i]
+            break
+        else:
+            state["equipped_melee_dict"] = state["fists"]
+
 
 def set_room_types(state):
     type_chosen = random.randrange(0, state["num_of_room_types"])
@@ -802,8 +836,10 @@ def set_pre_level_variables(state):
         state["gun_zombie_has_los"].append(True)
         state["gun_zombie_timer"].append(0)
         state["gun_zombie_shot_timer"].append(0)
+        state["gun_zombie_frozen_timer"].append(0)
         state["gun_zombie_speed_x"].append(0)
         state["gun_zombie_speed_y"].append(0)
+        state["gun_zombie_speed"].append(2)
         state["gun_zombie_x"][i] *= wall_width
         state["gun_zombie_y"][i] *= wall_height
 
@@ -963,6 +999,10 @@ def blit_rotate_center(surf, image, topleft, angle=1):
 
 def gun_zombie(x, y, rotation):
     blit_rotate_center(game_display, gun_zombie_image, (x, y), rotation)
+
+
+def gun_zombie_frozen(x, y, rotation):
+    blit_rotate_center(game_display, gun_zombie_frozen_image, (x, y), rotation)
 
 
 def gun_zombie_red(x, y, rotation):
@@ -1667,7 +1707,10 @@ def new_room(new_room_number, entered, state, side_entered):
     state["gun_zombie_timer"] = []
     state["gun_zombie_speed_x"] = []
     state["gun_zombie_speed_y"] = []
+    state["gun_zombie_speed"] = []
+    state["gun_zombie_frozen_timer"] = []
     state["gun_zombie_shot_timer"] = []
+    state["bullet_rotation"] = []
     state["num_of_gun_zombies"] = len(state["gun_zombie_x"])
     state["e_just_pressed"] = True
 
@@ -1686,21 +1729,34 @@ def new_room(new_room_number, entered, state, side_entered):
         state["gun_zombie_timer"].append(0)
         state["gun_zombie_speed_x"].append(0)
         state["gun_zombie_speed_y"].append(0)
+        state["gun_zombie_speed"].append(2)
         state["gun_zombie_x"][i] *= wall_width
         state["gun_zombie_y"][i] *= wall_height
         state["gun_zombie_shot_timer"].append(0)
+        state["gun_zombie_frozen_timer"].append(0)
 
     state["num_of_walls"] = len(state["wall_list_x"])
 
 
 def new_level():
+    fists = {
+        "name": "Fists",
+        "owned": True,
+        "equipped": False,
+        "swinging_image": pixel_melee_fists,
+        "damage": 1,
+        "delay": 35
+    }
     steel_sword = {
         "name": "Steel Sword",
         "description": "Deals 3 damage with an average swinging rate.",
         "image": pixel_steel_sword,
         "highlighted_image": pixel_steel_sword_highlighted,
+        "swinging_image": pixel_guy_swinging,
         "owned": True,
-        "equipped": False
+        "equipped": False,
+        "damage": 3,
+        "delay": 60
     }
 
     ice_sword = {
@@ -1708,8 +1764,11 @@ def new_level():
         "description": "Deals 2 damage with an average swinging rate and slows enemies.",
         "image": pixel_ice_sword,
         "highlighted_image": pixel_ice_sword_highlighted,
+        "swinging_image": pixel_melee_ice_sword,
         "owned": True,
-        "equipped": False
+        "equipped": False,
+        "damage": 2,
+        "delay": 60
     }
 
     hammer = {
@@ -1717,8 +1776,11 @@ def new_level():
         "description": "Deals 5 damage with an slow swinging rate.",
         "image": pixel_hammer,
         "highlighted_image": pixel_hammer_highlighted,
+        "swinging_image": pixel_melee_hammer,
         "owned": True,
-        "equipped": False
+        "equipped": False,
+        "damage": 5,
+        "delay": 180
     }
 
     speed_potion = {
@@ -1901,6 +1963,8 @@ def new_level():
         "screen": "attachments",
         "mouse_unclicked": True,
         "amulets_editing": [False, 0],
+        "fists": fists,
+        "equipped_melee_dict": "",
         "melee_list": [steel_sword, ice_sword, hammer],
         "melee_editing": [False, 0],
         "amulets_list": [amulet_of_healing, amulet_of_wrenches, amulet_of_dashing],
@@ -1976,7 +2040,9 @@ def new_level():
         "gun_zombie_timer": [],
         "gun_zombie_speed_x": [],
         "gun_zombie_speed_y": [],
+        "gun_zombie_speed": [],
         "gun_zombie_shot_timer": [],
+        "gun_zombie_frozen_timer": [],
 
         "coin_x": [],
         "coin_y": [],

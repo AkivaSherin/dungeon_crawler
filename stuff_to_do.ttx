@@ -3,7 +3,7 @@ randomly generate walls - waiting til later - now im not sure if i ever want to
 fix all of the glitches
 
 map
--get rid of cooldown(its unnecessary)_
+-get rid of cooldown(its unnecessary)
 -rotate pixel guy
 -maybe make green squares zombie images
 
@@ -13,7 +13,6 @@ deepen combat
 -add more bad guys
 --eventually make them smarter
 --cant walk on top of eachother
--make zombies red when you hit them
 -building
 -grenades
 -shotguns
@@ -22,6 +21,7 @@ add floors and levels
 -boss battle
 -shop
 --inventory
+--fix glitch
 ---melee weapons
 ---amulets
 ---potions
