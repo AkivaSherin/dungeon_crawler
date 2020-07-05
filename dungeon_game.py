@@ -461,6 +461,7 @@ def display_stuff(state):
                 gun_zombie_frozen(state["gun_zombie_x"][i], state["gun_zombie_y"][i], state["gun_zombie_rotation"][i])
             else:
                 gun_zombie(state["gun_zombie_x"][i], state["gun_zombie_y"][i], state["gun_zombie_rotation"][i])
+
     game_display.blit(border_list[state["room"]], (0, 0))
     show_money(state["coins_possessed"])
     show_health(state["pixel_guy_health"])
@@ -620,8 +621,8 @@ def melee(state):
 
 def fire_bullet(state):
     if state["mouse_click"][0] == 1 and state["bullet_delay"] == 0 and state["ammo"] > 0 and state["dashing_timer"] == 0:
-        state["pixel_bullet_x"].append(state["pixel_guy_x"] + pixel_guy_width / 2 + 70 * math.cos(math.radians(state["pixel_guy_rotation"])))
-        state["pixel_bullet_y"].append(state["pixel_guy_y"] + pixel_guy_height / 2 + -70 * math.sin(math.radians(state["pixel_guy_rotation"])))
+        state["pixel_bullet_x"].append(state["pixel_guy_x"] + 50 + 75 * math.cos(math.radians(state["pixel_guy_rotation"] + 7)))
+        state["pixel_bullet_y"].append(state["pixel_guy_y"] + 50 + -75 * math.sin(math.radians(state["pixel_guy_rotation"] + 7)))
         state["bullet_direction_x"].append(7 * math.cos(math.radians(state["pixel_guy_rotation"])))
         state["bullet_direction_y"].append(-7 * math.sin(math.radians(state["pixel_guy_rotation"])))
         state["bullet_exist"].append(True)
@@ -1965,6 +1966,7 @@ def new_level():
         "amulets_editing": [False, 0],
         "fists": fists,
         "equipped_melee_dict": "",
+        "equipped_sight_dict": "",
         "melee_list": [steel_sword, ice_sword, hammer],
         "melee_editing": [False, 0],
         "amulets_list": [amulet_of_healing, amulet_of_wrenches, amulet_of_dashing],
