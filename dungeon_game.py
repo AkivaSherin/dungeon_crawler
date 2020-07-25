@@ -62,6 +62,8 @@ tiny_pixel_guy = pygame.transform.scale(pixel_guy_north, (26, 26))
 pixel_guy_east = pygame.transform.rotate(pixel_guy_north, -90)
 pixel_crosshair = pygame.image.load("pixil-frame-0.png").convert_alpha()
 pixel_crosshair = pygame.transform.scale(pixel_crosshair, (crosshair_width, crosshair_height))
+pixel_red_dot_crosshair = pygame.image.load("pixel_red_dot_crosshair.png").convert_alpha()
+pixel_red_dot_crosshair = pygame.transform.scale(pixel_red_dot_crosshair, (crosshair_width, crosshair_height))
 pixel_bullet = pygame.image.load("pixel_bullet.png").convert_alpha()
 big_pixel_bullet = pygame.transform.scale(pixel_bullet, (pixel_bullet_width * 5, pixel_bullet_height * 5))
 pixel_bullet = pygame.transform.scale(pixel_bullet, (pixel_bullet_width, pixel_bullet_height))
@@ -468,7 +470,10 @@ def display_stuff(state):
     show_ammo_bar(state["ammo"])
     give_prompt(state["prompt"])
     if not state["reloading"]:
-        crosshair(state["crosshair_coordinates"])
+        if state["equipped_sight_dict"]["name"] == "Red Dot Sight":
+            red_dot_crosshair(state["crosshair_coordinates"])
+        else:
+            crosshair(state["crosshair_coordinates"])
     else:
         game_display.blit(state["reload_pie"], state["image_rect"])
     show_dash_bar(state["dashing_cooldown"])
@@ -628,7 +633,7 @@ def fire_bullet(state):
         state["bullet_exist"].append(True)
         state["bullet_rotation"].append(state["pixel_guy_rotation"])
         state["num_of_pixel_bullets"] += 1
-        state["bullet_delay"] = state["equipped_bullet_dict"]["fire_delay"]
+        state["bullet_delay"] = state["equipped_bullet_dict"]["fire_delay"] - state["fire_rate_modifier"]
         state["ammo"] -= 1
 
 
@@ -721,6 +726,8 @@ def set_loop_variables(state):
     state["current_room_cleared"] = True
     state["prompt"] = None
 
+    state["fire_rate_modifier"] = 0
+
     for i in range(state["num_of_gun_zombies"]):
         state["gun_zombie_has_los"][i] = True
         if state["gun_zombie_exist"][i]:
@@ -793,6 +800,13 @@ def set_loop_variables(state):
     for i in range(len(state["ammo_list"])):
         if state["ammo_list"][i]["equipped"]:
             state["equipped_bullet_dict"] = state["ammo_list"][i]
+
+    for i in range(len(state["sights_list"])):
+        if state["sights_list"][i]["equipped"]:
+            state["equipped_sight_dict"] = state["sights_list"][i]
+
+    if state["equipped_sight_dict"]["name"] == "Red Dot Sight":
+        state["fire_rate_modifier"] += 5
 
     for i in range(len(state["melee_list"])):
         if state["melee_list"][i]["equipped"]:
@@ -1016,6 +1030,10 @@ def bullet(image, x, y, rotation):
 
 def crosshair(coords):
     game_display.blit(pixel_crosshair, coords)
+
+
+def red_dot_crosshair(coords):
+    game_display.blit(pixel_red_dot_crosshair, coords)
 
 
 def pixel_guy(image, x, y):
@@ -1846,7 +1864,7 @@ def new_level():
 
     red_dot_sight = {
         "name": "Red Dot Sight",
-        "description": "Displays a red line on your screen to help you aim.",
+        "description": "Increases your fire rate.",
         "image": pixel_red_dot_sight,
         "highlighted_image": pixel_red_dot_sight_highlighted,
         "owned": True,
@@ -2068,7 +2086,9 @@ def new_level():
         "pixel_guy_rotation": "",
         "e_just_pressed": "",
         "equipped_bullet_dict": "",
-        "damage_image_length": 15
+        "damage_image_length": 15,
+
+        "fire_rate_modifier": 1
     }
 
     set_pre_level_variables(state)

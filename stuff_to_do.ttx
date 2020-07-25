@@ -31,4 +31,5 @@ long term
 -cx freeze
 -intro screen and death screen
 -multiple characters
+-add shooting rng
 --each character has special ability and traits
